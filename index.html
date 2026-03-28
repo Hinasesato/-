@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="description" content="営業・ダイエット・勉強など、あらゆる目標を行動プロセスで管理する無料ツール">
+<title>行動管理ダッシュボード — 無料で使える行動記録ツール</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#fff;--bg2:#f8f7f4;--bg3:#efedea;
+  --text:#18181a;--text2:#52514e;--text3:#96948e;
+  --border:rgba(0,0,0,0.10);--border2:rgba(0,0,0,0.18);
+  --blue:#1560b8;--blue-bg:#e6f0fc;--blue-text:#0b3878;
+  --green:#0a7a56;--green-bg:#e1f4ec;--green-text:#064d36;
+  --amber:#8e5c0e;--amber-bg:#fdf2da;--amber-text:#54360a;
+  --red:#aa2c2c;--red-bg:#fdebeb;--red-text:#721a1a;
+  --r:10px;--rsm:7px;--rlg:16px;
+  --font:'Hiragino Sans','Noto Sans JP','Yu Gothic',system-ui,sans-serif;
+  --shadow:0 1px 6px rgba(0,0,0,0.07);
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#18181a;--bg2:#222220;--bg3:#2a2a27;
+    --text:#e6e4de;--text2:#a4a29c;--text3:#666460;
+    --border:rgba(255,255,255,0.09);--border2:rgba(255,255,255,0.16);
+    --blue:#4a9ce0;--blue-bg:#0d2240;--blue-text:#90c8f8;
+    --green:#28b882;--green-bg:#092c20;--green-text:#68d8b0;
+    --amber:#e0a030;--amber-bg:#2a1e08;--amber-text:#f8d080;
+    --red:#e04848;--red-bg:#2a0e0e;--red-text:#f89090;
+    --shadow:0 1px 6px rgba(0,0,0,0.3);
+  }
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;min-height:100vh}
+
+/* ── LP風ヘッダー ── */
+.lp-header{background:var(--blue-bg);border-bottom:1px solid var(--border);padding:18px 16px 16px}
+.lp-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.lp-title{font-size:20px;font-weight:800;letter-spacing:-.4px}
+.lp-sub{font-size:12px;color:var(--text2);margin-top:2px}
+.lp-badges{display:flex;gap:6px;flex-wrap:wrap}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.badge-free{background:var(--green-bg);color:var(--green-text);border:1px solid var(--green)}
+.badge-local{background:var(--amber-bg);color:var(--amber-text);border:1px solid var(--amber)}
+.badge-sp{background:var(--blue-bg);color:var(--blue-text);border:1px solid var(--blue)}
+
+/* ── ナビ ── */
+.nav-wrap{background:var(--bg);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.nav-inner{max-width:1100px;margin:0 auto;padding:0 12px;overflow-x:auto;scrollbar-width:none}
+.nav-inner::-webkit-scrollbar{display:none}
+.tabs{display:flex;gap:2px;padding:6px 0;white-space:nowrap}
+.tab{padding:6px 13px;font-size:12px;font-weight:600;border-radius:var(--rsm);border:none;background:none;color:var(--text2);cursor:pointer;font-family:var(--font);transition:all .12s;flex-shrink:0}
+.tab:hover{background:var(--bg2);color:var(--text)}
+.tab.on{background:var(--text);color:var(--bg)}
+.pg{display:none}.pg.on{display:block}
+
+/* ── メインレイアウト ── */
+#root{max-width:1100px;margin:0 auto;padding:14px 12px 80px}
+.save-bar{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3);margin-bottom:10px}
+.sdot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
+
+/* ── 月ナビ ── */
+.month-nav{display:flex;align-items:center;gap:8px;background:var(--bg2);border-radius:var(--r);padding:9px 14px;margin-bottom:14px;flex-wrap:wrap;border:1px solid var(--border)}
+.mn-btn{background:none;border:1px solid var(--border2);border-radius:var(--rsm);padding:5px 13px;font-size:12px;cursor:pointer;color:var(--text2);font-family:var(--font);font-weight:600}
+.mn-btn:hover{background:var(--bg)}
+.mn-btn:disabled{opacity:.35;cursor:default}
+.mn-label{font-size:15px;font-weight:800;min-width:100px;text-align:center}
+.mn-today{background:var(--text);color:var(--bg);border:none;font-size:11px;padding:5px 12px;border-radius:var(--rsm);cursor:pointer;font-family:var(--font);font-weight:700}
+.mn-dots{display:flex;gap:4px;flex-wrap:wrap}
+.mn-dot{width:7px;height:7px;border-radius:50%;background:var(--border2);cursor:pointer;transition:background .12s}
+.mn-dot.has{background:rgba(21,96,184,0.4)}
+.mn-dot.cur{background:var(--blue)}
+.mn-dot.active{outline:2px solid var(--text);outline-offset:1px}
+
+/* ── グリッド ── */
+.g2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin-bottom:12px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:10px}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.g5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:10px}
+@media(max-width:680px){
+  .g2{grid-template-columns:1fr}
+  .g4{grid-template-columns:1fr 1fr}
+  .g5{grid-template-columns:1fr 1fr 1fr}
+  .pdca-grid{grid-template-columns:1fr!important}
+}
+
+/* ── カード ── */
+.card{background:var(--bg);border:1px solid var(--border);border-radius:var(--rlg);padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.ch{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px}
+
+/* ── KPIカード ── */
+.kpi{background:var(--bg2);border-radius:var(--r);padding:12px 14px;border:1px solid var(--border);position:relative}
+.kl{font-size:10px;color:var(--text3);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.kv{font-size:28px;font-weight:800;line-height:1;letter-spacing:-.5px}
+.ksub{font-size:11px;color:var(--text3);margin-top:3px}
+.kbar{height:3px;background:var(--border);border-radius:2px;margin-top:8px;overflow:hidden}
+.kfill{height:100%;border-radius:2px;transition:width .5s}
+
+/* ── ヒーローKPI（月間合計） ── */
+.hero-kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+@media(max-width:680px){.hero-kpi-grid{grid-template-columns:1fr 1fr}}
+.hero-kpi{background:var(--bg2);border-radius:var(--rlg);padding:16px 14px 14px;border:1px solid var(--border);text-align:center}
+.hk-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.hk-val{font-size:36px;font-weight:800;line-height:1;letter-spacing:-1px}
+.hk-sub{font-size:11px;color:var(--text3);margin-top:4px}
+.hk-bar{height:4px;background:var(--border);border-radius:2px;margin-top:10px;overflow:hidden}
+.hk-fill{height:100%;border-radius:2px;transition:width .5s}
+
+/* ── シェアカード ── */
+.share-card{background:linear-gradient(135deg,var(--blue-bg),var(--green-bg));border:1px solid var(--border);border-radius:var(--rlg);padding:16px 18px;margin-bottom:12px}
+.share-card h3{font-size:13px;font-weight:700;margin-bottom:8px}
+.share-text{background:var(--bg);border-radius:var(--r);padding:12px 14px;font-size:12px;line-height:1.8;color:var(--text2);border:1px solid var(--border);white-space:pre-wrap;word-break:break-all}
+.copy-btn{background:var(--text);color:var(--bg);border:none;border-radius:var(--rsm);padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);margin-top:8px;transition:opacity .12s}
+.copy-btn:hover{opacity:.82}
+.copy-btn.copied{background:var(--green);color:#fff}
+
+/* ── フォーム ── */
+.fl{font-size:11px;color:var(--text2);display:block;margin-bottom:5px;margin-top:10px;font-weight:600}
+input,select,textarea{width:100%;padding:10px 11px;border:1px solid var(--border2);border-radius:var(--rsm);font-size:14px;background:var(--bg);color:var(--text);font-family:var(--font);-webkit-appearance:none}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--blue);border-color:transparent}
+@media(max-width:680px){input,select,textarea{font-size:16px;padding:12px 11px}}
+textarea{resize:vertical;line-height:1.6;min-height:68px}
+.btn{padding:8px 18px;border-radius:var(--rsm);font-size:13px;cursor:pointer;font-family:var(--font);border:none;font-weight:700;transition:opacity .12s;-webkit-appearance:none}
+.btn-p{background:var(--text);color:var(--bg)}.btn-p:hover{opacity:.82}
+.btn-g{background:none;border:1px solid var(--border2);color:var(--text2)}.btn-g:hover{background:var(--bg2)}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn-warn{background:none;border:1px solid var(--red);color:var(--red-text);font-size:12px;padding:5px 12px}.btn-warn:hover{background:var(--red-bg)}
+.btn-green{background:var(--green-bg);color:var(--green-text);border:1px solid var(--green)}
+
+/* ── +/- ── */
+.nc-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--border2);background:none;cursor:pointer;font-size:18px;color:var(--text2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .12s}
+.nc-btn:hover{background:var(--bg2)}
+.nc-wrap{display:flex;align-items:center;gap:8px;margin-top:4px}
+.nc-input{flex:1;text-align:center;font-size:22px;font-weight:800;padding:6px}
+
+/* ── 気分 ── */
+.mood-strip{display:flex;gap:6px}
+.mb{flex:1;padding:8px 2px;border-radius:var(--rsm);border:1px solid var(--border);background:none;cursor:pointer;font-size:22px;text-align:center;transition:all .12s}
+.mb.on{background:var(--bg2);border-color:var(--border2)}
+
+/* ── セグメント ── */
+.seg{display:flex;gap:4px;margin-bottom:10px}
+.seg-btn{flex:1;padding:7px;font-size:12px;font-weight:600;border-radius:var(--rsm);border:1px solid var(--border);background:none;cursor:pointer;color:var(--text2);font-family:var(--font);text-align:center}
+.seg-btn.on{background:var(--bg2);border-color:var(--border2);color:var(--text)}
+
+/* ── ドット ── */
+.dots{display:flex;gap:3px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--border)}
+.dot.hit{background:var(--green)}.dot.cur{background:var(--blue)}
+
+/* ── ファネル ── */
+.funnel-wrap{display:flex;flex-direction:column;gap:4px}
+.funnel-row{display:flex;align-items:center;gap:8px}
+.funnel-label{width:90px;font-size:11px;color:var(--text2);flex-shrink:0;text-align:right;font-weight:600}
+.funnel-bar-wrap{flex:1;height:28px;background:var(--bg3);border-radius:5px;overflow:hidden}
+.funnel-fill{height:100%;border-radius:5px;transition:width .5s}
+.funnel-val{width:36px;font-size:14px;font-weight:800;flex-shrink:0;text-align:right}
+
+/* ── PDCA ── */
+.pdca-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-bottom:10px}
+.pdca-box{border-radius:var(--r);padding:10px 12px}
+.pdca-tag{font-size:10px;font-weight:800;margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+
+/* ── 思考ログ ── */
+.thought{border-left:3px solid var(--border2);padding:5px 12px;margin-bottom:8px}
+.thought.s{border-left-color:var(--green)}.thought.f{border-left-color:var(--red)}.thought.h{border-left-color:var(--blue)}
+.tl{font-size:10px;font-weight:700;color:var(--text3);margin-bottom:2px;text-transform:uppercase;letter-spacing:.04em}
+.tb{font-size:12px;color:var(--text2);line-height:1.5}
+
+/* ── 日報リスト ── */
+.ri{background:var(--bg2);border-radius:var(--r);padding:11px 13px;margin-bottom:8px;cursor:pointer;border:1px solid transparent;transition:all .12s}
+.ri:hover{border-color:var(--border2)}
+.ri.sel{border-color:var(--blue)!important;background:var(--blue-bg)!important}
+
+/* ── 月比較 ── */
+.compare-row{display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid var(--border);cursor:pointer;border-radius:6px;transition:background .12s}
+.compare-row:last-child{border-bottom:none}
+.compare-row:hover,.compare-row.active-month{background:var(--blue-bg);padding:8px 8px}
+
+/* ── 個人目標 ── */
+.pg-item{display:flex;align-items:flex-start;gap:10px;padding:11px 0;border-bottom:1px solid var(--border)}
+.pg-item:last-child{border-bottom:none}
+.pg-chk{width:20px;height:20px;border-radius:5px;border:1.5px solid var(--border2);background:none;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all .12s}
+.pg-chk.done{background:var(--text);border-color:var(--text)}
+.pg-chk.done::after{content:'';display:block;width:10px;height:6px;border-left:2px solid var(--bg);border-bottom:2px solid var(--bg);transform:rotate(-45deg) translate(1px,-1px)}
+.pgtitle{font-size:13px;line-height:1.4;font-weight:500}
+.pgtitle.done{text-decoration:line-through;color:var(--text3)}
+.pgcat{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700}
+.pgdel{background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;padding:2px 4px;flex-shrink:0}
+
+/* ── 使い方 ── */
+.guide-hero{background:var(--blue-bg);border-radius:var(--rlg);padding:22px 24px;margin-bottom:16px;border:1px solid var(--border)}
+.guide-hero h2{font-size:20px;font-weight:800;letter-spacing:-.4px;margin-bottom:6px}
+.guide-hero p{font-size:13px;color:var(--text2);line-height:1.7}
+.step-card{display:flex;gap:13px;padding:13px;background:var(--bg2);border-radius:var(--r);margin-bottom:8px;border:1px solid var(--border)}
+.step-num{width:30px;height:30px;border-radius:50%;background:var(--text);color:var(--bg);font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step-title{font-size:13px;font-weight:700;margin-bottom:2px}
+.step-desc{font-size:12px;color:var(--text2);line-height:1.5}
+.step-tip{font-size:11px;color:var(--text3);margin-top:3px;padding:4px 9px;background:var(--bg);border-radius:var(--rsm);border-left:2px solid var(--border2);line-height:1.5}
+.uc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:12px}
+@media(max-width:500px){.uc-grid{grid-template-columns:1fr}}
+.uc{border-radius:var(--rlg);padding:14px;border:1px solid var(--border)}
+.faq-item{padding:11px 0;border-bottom:1px solid var(--border)}
+.faq-item:last-child{border-bottom:none}
+.faq-q{font-size:13px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.faq-a{font-size:12px;color:var(--text2);line-height:1.7;padding-top:7px;display:none}
+
+/* ── データ管理 ── */
+.data-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rlg);padding:16px;margin-bottom:12px}
+.data-box h3{font-size:13px;font-weight:700;margin-bottom:8px}
+.stat-num{font-size:30px;font-weight:800;color:var(--blue)}
+
+/* ── フッター ── */
+.footer{text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text3);border-top:1px solid var(--border);margin-top:8px}
+
+/* ── トースト ── */
+.toast{position:fixed;bottom:28px;right:16px;background:var(--text);color:var(--bg);font-size:13px;font-weight:700;padding:12px 20px;border-radius:var(--r);z-index:9999;font-family:var(--font);box-shadow:0 4px 20px rgba(0,0,0,.2);max-width:80vw}
+</style>
+</head>
+<body>
+
+<div class="lp-header">
+  <div class="lp-inner">
+    <div>
+      <div class="lp-title">行動管理ダッシュボード</div>
+      <div class="lp-sub">営業・ダイエット・勉強など、あらゆる目標を行動で管理する無料ツール</div>
+    </div>
+    <div class="lp-badges">
+      <span class="badge badge-free">完全無料</span>
+      <span class="badge badge-local">データ保存対応</span>
+      <span class="badge badge-sp">スマホ対応</span>
+    </div>
+  </div>
+</div>
+
+<div class="nav-wrap">
+  <div class="nav-inner">
+    <div class="tabs">
+      <button class="tab on"  onclick="sw('guide')">使い方</button>
+      <button class="tab"     onclick="sw('home')">ホーム</button>
+      <button class="tab"     onclick="sw('report')">日報入力</button>
+      <button class="tab"     onclick="sw('history')">日報履歴</button>
+      <button class="tab"     onclick="sw('pattern')">成功パターン</button>
+      <button class="tab"     onclick="sw('goal')">目標設定</button>
+      <button class="tab"     onclick="sw('mypgoal')">個人目標</button>
+      <button class="tab"     onclick="sw('data')">データ管理</button>
+    </div>
+  </div>
+</div>
+
+<div id="root">
+  <div class="save-bar"><div class="sdot" id="sdot"></div><span id="slabel">読み込み中...</span></div>
+  <div id="pg-guide"   class="pg on"></div>
+  <div id="pg-home"    class="pg"></div>
+  <div id="pg-report"  class="pg"></div>
+  <div id="pg-history" class="pg"></div>
+  <div id="pg-pattern" class="pg"></div>
+  <div id="pg-goal"    class="pg"></div>
+  <div id="pg-mypgoal" class="pg"></div>
+  <div id="pg-data"    class="pg"></div>
+  <div class="footer">行動管理ダッシュボード &nbsp;|&nbsp; 完全無料 &nbsp;|&nbsp; データはこのブラウザのみに保存（外部送信なし）</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const MOODS=['😫','😟','😐','😊','😄'];
+const FUNNEL=[
+  {k:'approach',label:'アプローチ',c:'rgba(21,96,184,0.75)'},
+  {k:'hearing', label:'ヒアリング', c:'rgba(10,122,86,0.75)'},
+  {k:'proposal',label:'提案数',     c:'rgba(142,92,14,0.75)'},
+  {k:'closing', label:'クロージング',c:'rgba(180,70,28,0.75)'},
+  {k:'contract',label:'成約数',     c:'rgba(10,122,86,0.95)'}
+];
+const LOSS=['価格','検討中','家族相談','タイミング','競合他社','その他'];
+const CATS=[
+  {k:'work',   l:'仕事',       bg:'#e6f0fc',c:'#0b3878'},
+  {k:'income', l:'収入',       bg:'#e1f4ec',c:'#064d36'},
+  {k:'health', l:'健康',       bg:'#fdf2da',c:'#54360a'},
+  {k:'skill',  l:'スキル',     bg:'#ede8fe',c:'#36267a'},
+  {k:'habit',  l:'習慣',       bg:'#e8f5da',c:'#26480a'},
+  {k:'private',l:'プライベート',bg:'#fde8e2',c:'#62180a'},
+  {k:'other',  l:'その他',     bg:'#f0ede8',c:'#38342e'}
+];
+const KEY='action_dash_v1';
+
+let goals={daily:{approach:20,hearing:8,proposal:3,closing:2,contract:1},monthly:{approach:400,hearing:160,proposal:60,closing:40,contract:20}};
+let reports=[], patterns=[], personalGoals=[];
+let charts={}, selMood='😊', pgCat='work', patType='success', editId=null;
+const NOW=new Date();
+let vy=NOW.getFullYear(), vm=NOW.getMonth()+1, curTab='guide';
+
+function save(){
+  try{localStorage.setItem(KEY,JSON.stringify({goals,reports,patterns,personalGoals,at:new Date().toISOString()}));showSaved();}
+  catch(e){ul('保存失敗（容量不足の可能性）');}
+}
+function load(){
+  try{
+    const r=localStorage.getItem(KEY);
+    if(!r){ul('新規データ — 今日から記録を始めましょう');return;}
+    const d=JSON.parse(r);
+    if(d.goals)goals=d.goals;if(d.reports)reports=d.reports;if(d.patterns)patterns=d.patterns;if(d.personalGoals)personalGoals=d.personalGoals;
+    if(d.at){const t=new Date(d.at);ul(`最終保存: ${t.getMonth()+1}/${t.getDate()} ${t.getHours()}:${p2(t.getMinutes())}`);}
+  }catch(e){ul('データ読み込み失敗');}
+}
+function showSaved(){const t=new Date();ul(`自動保存済 ${t.getHours()}:${p2(t.getMinutes())}`);}
+function ul(s){const e=document.getElementById('slabel');if(e)e.textContent=s;}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5)}
+function td(){const d=new Date();return`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`}
+function p2(n){return String(n).padStart(2,'0')}
+function vym(){return`${vy}-${p2(vm)}`}
+function isCM(){return vy===NOW.getFullYear()&&vm===NOW.getMonth()+1}
+function vR(){return reports.filter(r=>r.date.startsWith(vym()))}
+function vS(k){return vR().reduce((a,r)=>a+(r[k]||0),0)}
+function pct(v,g){return g?Math.min(100,Math.round(v/g*100)):0}
+function pc(p){return p>=100?'var(--green)':p>=60?'var(--amber)':'var(--red)'}
+function lid(r){return r.replace(/\s/g,'_')}
+function allMs(){const s=new Set(reports.map(r=>r.date.slice(0,7)));s.add(`${NOW.getFullYear()}-${p2(NOW.getMonth()+1)}`);return[...s].sort();}
+function toast(m,bg){
+  const t=document.createElement('div');t.className='toast';if(bg)t.style.background=bg;t.textContent=m;
+  document.body.appendChild(t);setTimeout(()=>{t.style.transition='opacity .3s';t.style.opacity='0';setTimeout(()=>t.remove(),300);},2200);
+}
+
+const TABS=['guide','home','report','history','pattern','goal','mypgoal','data'];
+function sw(tab,rid){
+  curTab=tab;
+  TABS.forEach((t,i)=>{document.querySelectorAll('.tab')[i].classList.toggle('on',t===tab);document.getElementById('pg-'+t).classList.toggle('on',t===tab);});
+  Object.values(charts).forEach(c=>{try{c.destroy()}catch(e){}});charts={};
+  editId=(tab==='report'&&rid)?rid:null;
+  ({guide:rGuide,home:rHome,report:rReport,history:rHistory,pattern:rPattern,goal:rGoal,mypgoal:rPGoal,data:rData})[tab]();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function mnHTML(){
+  const cur=`${NOW.getFullYear()}-${p2(NOW.getMonth()+1)}`;
+  const ms=allMs();const noNext=vym()>=cur;
+  const dots=ms.slice(-12).map(ym=>{const iC=ym===cur,iA=ym===vym(),h=reports.some(r=>r.date.startsWith(ym));return`<div class="mn-dot${iC?' cur':''}${h?' has':''}${iA?' active':''}" title="${ym}" onclick="jm('${ym}')"></div>`;}).join('');
+  return`<div class="month-nav">
+    <button class="mn-btn" onclick="chM(-1)">◀</button>
+    <span class="mn-label">${vy}年${vm}月</span>
+    <button class="mn-btn" onclick="chM(1)"${noNext?' disabled':''}>▶</button>
+    ${!isCM()?`<button class="mn-today" onclick="goT()">今月</button>`:''}
+    <span style="font-size:10px;color:var(--text3)">${vR().length}件の記録</span>
+    <div class="mn-dots">${dots}</div>
+  </div>`;
+}
+function chM(d){vm+=d;if(vm>12){vm=1;vy++;}if(vm<1){vm=12;vy--;}const cur=`${NOW.getFullYear()}-${p2(NOW.getMonth()+1)}`;if(vym()>cur){vy=NOW.getFullYear();vm=NOW.getMonth()+1;}reR();}
+function goT(){vy=NOW.getFullYear();vm=NOW.getMonth()+1;reR();}
+function jm(ym){vy=parseInt(ym.slice(0,4));vm=parseInt(ym.slice(5,7));reR();}
+function reR(){const fn={home:rHome,history:rHistory,goal:rGoal};if(fn[curTab])fn[curTab]();}
+
+/* ── ホーム ── */
+function rHome(){
+  const vr=vR();const tA=vS('approach'),tC=vS('contract'),tP=vS('proposal'),tH=vS('hearing');
+  const cR=tA>0?(tC/tA*100).toFixed(1):0;const streak=calcS();
+  const todR=reports.find(r=>r.date===td());
+  const pA=pct(tA,goals.monthly.approach),pC=pct(tC,goals.monthly.contract),
+        pP=pct(tP,goals.monthly.proposal),pR=tA>0?parseFloat(cR):0;
+
+  document.getElementById('pg-home').innerHTML=mnHTML()+`
+    <!-- ヒーローKPI -->
+    <div class="hero-kpi-grid">
+      <div class="hero-kpi">
+        <div class="hk-label">今月の行動数</div>
+        <div class="hk-val" style="color:var(--blue)">${tA}</div>
+        <div class="hk-sub">目標 ${goals.monthly.approach}</div>
+        <div class="hk-bar"><div class="hk-fill" style="width:${pA}%;background:var(--blue)"></div></div>
+        <div style="font-size:10px;font-weight:700;color:${pc(pA)};margin-top:4px">${pA}%</div>
+      </div>
+      <div class="hero-kpi">
+        <div class="hk-label">今月の提案数</div>
+        <div class="hk-val" style="color:var(--amber)">${tP}</div>
+        <div class="hk-sub">目標 ${goals.monthly.proposal}</div>
+        <div class="hk-bar"><div class="hk-fill" style="width:${pP}%;background:var(--amber)"></div></div>
+        <div style="font-size:10px;font-weight:700;color:${pc(pP)};margin-top:4px">${pP}%</div>
+      </div>
+      <div class="hero-kpi">
+        <div class="hk-label">今月の成約数</div>
+        <div class="hk-val" style="color:var(--green)">${tC}</div>
+        <div class="hk-sub">目標 ${goals.monthly.contract}</div>
+        <div class="hk-bar"><div class="hk-fill" style="width:${pct(tC,goals.monthly.contract)}%;background:var(--green)"></div></div>
+        <div style="font-size:10px;font-weight:700;color:${pc(pct(tC,goals.monthly.contract))};margin-top:4px">${pct(tC,goals.monthly.contract)}%</div>
+      </div>
+      <div class="hero-kpi">
+        <div class="hk-label">成約率</div>
+        <div class="hk-val" style="color:${pR>=10?'var(--green)':pR>=5?'var(--amber)':'var(--red)'}">${cR}<span style="font-size:18px;font-weight:700">%</span></div>
+        <div class="hk-sub">行動→成約の転換率</div>
+        <div class="hk-bar"><div class="hk-fill" style="width:${Math.min(100,pR*5)}%;background:${pR>=10?'var(--green)':pR>=5?'var(--amber)':'var(--red)'}"></div></div>
+        <div style="font-size:10px;font-weight:700;color:var(--text3);margin-top:4px">連続 ${streak}日</div>
+      </div>
+    </div>
+
+    <!-- シェア用サマリー -->
+    ${vr.length>0?`<div class="share-card">
+      <h3>📤 SNSシェア用サマリー（1クリックでコピー）</h3>
+      <div class="share-text" id="share-txt">${genShareText(tA,tP,tC,cR)}</div>
+      <button class="copy-btn" id="copy-btn" onclick="copyShare()">テキストをコピー</button>
+    </div>`:''}
+
+    ${vr.length===0?`<div style="text-align:center;padding:52px 20px;background:var(--bg2);border-radius:var(--rlg)">
+      <div style="font-size:30px;margin-bottom:10px">📋</div>
+      <div style="font-size:15px;font-weight:800;margin-bottom:6px">${vy}年${vm}月の記録はまだありません</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.7">${isCM()?'最初の日報を書いてみましょう':'この月の記録はありません'}</div>
+      ${isCM()?`<button class="btn btn-p" onclick="sw('report')">日報を書く →</button>`:''}
+    </div>`:`
+    <div class="g2">
+      <div class="card"><div class="ch">行動ファネル（${vy}年${vm}月）<span style="font-size:10px;font-weight:400;color:var(--text3)">どこで止まっているか</span></div>${fnlH(vr)}</div>
+      <div class="card">
+        <div class="ch">${isCM()?'本日の記録':'最新記録'} ${isCM()?`<button class="btn btn-p btn-sm" onclick="sw('report')">入力</button>`:''}</div>
+        ${(()=>{const l=isCM()?todR:[...vr].sort((a,b)=>b.date.localeCompare(a.date))[0];return l?`
+          <div class="g3" style="margin-bottom:8px">${['approach','proposal','contract'].map(k=>{const f=FUNNEL.find(x=>x.k===k);return`<div style="background:var(--bg2);border-radius:var(--r);padding:9px;text-align:center"><div style="font-size:9px;color:var(--text3);margin-bottom:3px;font-weight:700">${f.label}</div><div style="font-size:22px;font-weight:800">${l[k]||0}</div></div>`;}).join('')}</div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">${l.date}</div>
+          ${l.successPattern?`<div class="thought s"><div class="tl">成功パターン</div><div class="tb">${l.successPattern}</div></div>`:''}
+          ${l.nextAction?`<div class="thought h"><div class="tl">明日の重点</div><div class="tb">${l.nextAction}</div></div>`:''}
+          <div style="margin-top:6px;font-size:20px">${l.mood||''}</div>
+        `:`<div style="padding:20px 0;text-align:center;font-size:12px;color:var(--text3)">記録なし</div>`;})()}
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px">
+          <span style="font-size:10px;color:var(--text3)">連続記録</span>
+          <span style="font-size:20px;font-weight:800;color:var(--blue)">${streak}</span>
+          <span style="font-size:10px;color:var(--text3)">日</span>
+          <div class="dots">${bDots()}</div>
+        </div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card"><div class="ch">障害・失注分析<span style="font-size:10px;font-weight:400;color:var(--text3)">どこで負けているか</span></div>${lossH(vr)}</div>
+      <div class="card"><div class="ch">日次 行動推移</div><div style="position:relative;height:155px"><canvas id="ht"></canvas></div></div>
+    </div>`}
+    <div class="card"><div class="ch">月別サマリー比較<span style="font-size:10px;font-weight:400;color:var(--text3)">クリックでその月に移動</span></div>${mCmpH()}</div>
+  `;
+
+  if(vr.length>0){
+    setTimeout(()=>{
+      const dim=new Date(vy,vm,0).getDate();const lb=[],d1=[],d2=[];
+      for(let d=1;d<=dim;d++){const ds=`${vy}-${p2(vm)}-${p2(d)}`;const r=reports.find(x=>x.date===ds);lb.push(d);d1.push(r?r.approach||0:0);d2.push(r?(r.contract||0)*5:0);}
+      charts.ht=new Chart(document.getElementById('ht'),{type:'bar',data:{labels:lb,datasets:[{data:d1,backgroundColor:'rgba(21,96,184,0.6)',borderRadius:2,borderWidth:0},{data:d2,backgroundColor:'rgba(10,122,86,0.8)',borderRadius:2,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:8},autoSkip:true,maxTicksLimit:10},grid:{display:false}},y:{ticks:{font:{size:10}},grid:{color:'rgba(128,128,128,0.08)'}}}}});
+    },0);
+  }
+}
+
+function genShareText(tA,tP,tC,cR){
+  const d=new Date();
+  return `📊 ${d.getFullYear()}年${d.getMonth()+1}月の行動記録\n\n行動数　${tA}\n提案数　${tP}\n成約数　${tC}\n成約率　${cR}%\n\n行動管理ダッシュボードで記録中 📈\n#行動管理 #営業 #自己管理`;
+}
+function copyShare(){
+  const el=document.getElementById('share-txt');const btn=document.getElementById('copy-btn');
+  if(!el||!btn)return;
+  navigator.clipboard?.writeText(el.textContent).then(()=>{btn.textContent='コピーしました！';btn.classList.add('copied');setTimeout(()=>{btn.textContent='テキストをコピー';btn.classList.remove('copied');},2000);}).catch(()=>{const r=document.createRange();r.selectNode(el);window.getSelection()?.removeAllRanges();window.getSelection()?.addRange(r);document.execCommand('copy');btn.textContent='コピーしました！';btn.classList.add('copied');setTimeout(()=>{btn.textContent='テキストをコピー';btn.classList.remove('copied');},2000);});
+}
+
+function fnlH(vr){
+  const tot={};FUNNEL.forEach(f=>{tot[f.k]=vr.reduce((a,r)=>a+(r[f.k]||0),0);});
+  const mx=Math.max(tot[FUNNEL[0].k],1);let h='<div class="funnel-wrap">';
+  FUNNEL.forEach((f,i)=>{const v=tot[f.k];const rt=i>0&&tot[FUNNEL[i-1].k]>0?Math.round(v/tot[FUNNEL[i-1].k]*100):null;
+    if(i>0)h+=`<div style="text-align:right;font-size:10px;color:var(--text3);padding-right:42px;margin-bottom:-1px;font-weight:600">${rt}%↓</div>`;
+    h+=`<div class="funnel-row"><span class="funnel-label">${f.label}</span><div class="funnel-bar-wrap"><div class="funnel-fill" style="width:${Math.max(5,Math.round(v/mx*100))}%;background:${f.c}"></div></div><span class="funnel-val">${v}</span></div>`;
+  });return h+'</div>';
+}
+function lossH(vr){
+  const tot={};LOSS.forEach(r=>{tot[r]=vr.reduce((a,rep)=>a+((rep.loss&&rep.loss[r])||0),0);});
+  const mx=Math.max(...Object.values(tot),1);
+  return`<div>${LOSS.map(r=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px"><span style="font-size:11px;color:var(--text2);width:72px;flex-shrink:0;font-weight:600">${r}</span><div style="flex:1;height:7px;background:var(--bg3);border-radius:4px;overflow:hidden"><div style="width:${Math.round(tot[r]/mx*100)}%;height:100%;border-radius:4px;background:var(--red)"></div></div><span style="font-size:12px;font-weight:800;width:20px;text-align:right">${tot[r]}</span></div>`).join('')}</div>`;
+}
+function mCmpH(){
+  const ms=allMs();if(ms.length===0)return`<div style="font-size:12px;color:var(--text3);padding:8px 0">まだ記録がありません</div>`;
+  const mxA=Math.max(...ms.map(ym=>reports.filter(r=>r.date.startsWith(ym)).reduce((a,r)=>a+(r.approach||0),0)),1);
+  return`<div>${[...ms].reverse().map(ym=>{
+    const rps=reports.filter(r=>r.date.startsWith(ym));
+    const ap=rps.reduce((a,r)=>a+(r.approach||0),0);const co=rps.reduce((a,r)=>a+(r.contract||0),0);
+    const pp=rps.reduce((a,r)=>a+(r.proposal||0),0);
+    const cr=ap>0?(co/ap*100).toFixed(1):0;const p=pct(ap,goals.monthly.approach);const iA=ym===vym();
+    return`<div class="compare-row${iA?' active-month':''}" onclick="jm('${ym}')">
+      <span style="width:76px;font-size:12px;font-weight:800;flex-shrink:0">${parseInt(ym.slice(0,4))}年${parseInt(ym.slice(5,7))}月</span>
+      <div style="flex:1;height:12px;background:var(--bg3);border-radius:4px;overflow:hidden"><div style="width:${Math.round(ap/mxA*100)}%;height:100%;border-radius:4px;background:var(--blue)"></div></div>
+      <span style="font-size:11px;color:var(--text2);width:54px;text-align:right;flex-shrink:0">行動 ${ap}</span>
+      <span style="font-size:11px;color:var(--text2);width:50px;text-align:right;flex-shrink:0">提案 ${pp}</span>
+      <span style="font-size:11px;color:var(--green-text);width:50px;text-align:right;flex-shrink:0;font-weight:700">成約 ${co}</span>
+      <span style="font-size:11px;font-weight:800;width:44px;text-align:right;flex-shrink:0;color:${pc(p)}">${cr}%</span>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+/* ── 日報入力 ── */
+function rReport(){
+  const isE=editId!==null;const r=isE?reports.find(x=>x.id===editId):reports.find(x=>x.date===td());
+  const v=k=>r?(r[k]||0):0;const t=k=>r?(r[k]||''):'';selMood=r?.mood||'😊';
+  document.getElementById('pg-report').innerHTML=`
+    ${isE?`<div style="background:var(--amber-bg);border-radius:var(--r);padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <span style="font-size:12px;font-weight:700;color:var(--amber-text)">${r.date} の日報を編集中</span>
+      <button class="btn btn-g btn-sm" onclick="editId=null;sw('history')">← 履歴に戻る</button>
+    </div>`:''}
+    <div class="g2">
+      <div>
+        <div class="card">
+          <div class="ch">KPI（行動量）${isE?`<span style="font-size:10px;font-weight:400">${r.date}</span>`:''}</div>
+          ${!isE?`<div style="margin-bottom:12px"><label class="fl" style="margin-top:0">日付（過去の日付も入力できます）</label><input type="date" id="rd" value="${td()}" max="${td()}"/></div>`:''}
+          <div class="g3" style="margin-bottom:10px">${FUNNEL.slice(0,3).map(f=>`<div class="kpi"><div class="kl">${f.label}</div><div class="hk-sub" style="font-size:10px">日標 ${goals.daily[f.k]}</div><div class="nc-wrap"><button class="nc-btn" onclick="aKpi('${f.k}',-1)">−</button><input class="nc-input" type="number" id="kpi-${f.k}" value="${v(f.k)}" min="0"/><button class="nc-btn" onclick="aKpi('${f.k}',1)">＋</button></div></div>`).join('')}</div>
+          <div class="g2">${FUNNEL.slice(3).map(f=>`<div class="kpi"><div class="kl">${f.label}</div><div class="hk-sub" style="font-size:10px">日標 ${goals.daily[f.k]}</div><div class="nc-wrap"><button class="nc-btn" onclick="aKpi('${f.k}',-1)">−</button><input class="nc-input" type="number" id="kpi-${f.k}" value="${v(f.k)}" min="0"/><button class="nc-btn" onclick="aKpi('${f.k}',1)">＋</button></div></div>`).join('')}</div>
+        </div>
+        <div class="card">
+          <div class="ch">PDCA</div>
+          <div class="pdca-grid">
+            <div class="pdca-box" style="background:var(--blue-bg)"><div class="pdca-tag" style="color:var(--blue-text)">P — 計画</div><textarea id="rp" rows="2" placeholder="今日は何を達成したいか">${t('plan')}</textarea></div>
+            <div class="pdca-box" style="background:var(--green-bg)"><div class="pdca-tag" style="color:var(--green-text)">D — 行動</div><textarea id="rd2" rows="2" placeholder="どんな行動をとったか">${t('action')}</textarea></div>
+            <div class="pdca-box" style="background:var(--amber-bg)"><div class="pdca-tag" style="color:var(--amber-text)">C — 評価</div><textarea id="rc" rows="2" placeholder="結果はどうだったか">${t('check')}</textarea></div>
+            <div class="pdca-box" style="background:var(--red-bg)"><div class="pdca-tag" style="color:var(--red-text)">A — 改善</div><textarea id="ra" rows="2" placeholder="明日何を変えるか">${t('nextAction')}</textarea></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="ch">成功パターンの言語化<span style="font-size:10px;font-weight:400;color:var(--text3)">必ず書く</span></div>
+          <label class="fl" style="margin-top:0">うまくいったこと</label>
+          <textarea id="rs" rows="2" placeholder="例：○○したら△△がうまくいった">${t('successPattern')}</textarea>
+          <label class="fl">詰まったこと・障害</label>
+          <textarea id="rf" rows="2" placeholder="例：○○のときに止まった">${t('failReason')}</textarea>
+        </div>
+        <div class="card">
+          <div class="ch">障害・失注の理由（件数）</div>
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px">
+            ${LOSS.map(lr=>`<div style="display:flex;align-items:center;gap:6px"><span style="font-size:11px;color:var(--text2);width:64px;flex-shrink:0;font-weight:600">${lr}</span><div class="nc-wrap" style="flex:1"><button class="nc-btn" onclick="aL('${lr}',-1)">−</button><input type="number" id="l-${lid(lr)}" value="${r&&r.loss?r.loss[lr]||0:0}" min="0" style="width:44px;text-align:center;font-size:16px;font-weight:800;padding:5px"/><button class="nc-btn" onclick="aL('${lr}',1)">＋</button></div></div>`).join('')}
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch">思考ログ・明日の重点行動</div>
+          <label class="fl" style="margin-top:0">今日の学び・仮説</label>
+          <textarea id="rh" rows="2" placeholder="例：○○を試したら△△だった">${t('hypothesis')}</textarea>
+          <label class="fl">明日の重点行動（最優先3つ）</label>
+          <input id="r1" placeholder="① 最優先タスク" value="${t('priority1')}" style="margin-bottom:6px"/>
+          <input id="r2" placeholder="② 2番目のタスク" value="${t('priority2')}" style="margin-bottom:6px"/>
+          <input id="r3" placeholder="③ 3番目のタスク" value="${t('priority3')}" style="margin-bottom:10px"/>
+          <label class="fl" style="margin-top:0">今日の気分</label>
+          <div class="mood-strip" style="margin-bottom:10px">${MOODS.map(m=>`<button class="mb${selMood===m?' on':''}" data-mood="${m}" onclick="pMood(this)">${m}</button>`).join('')}</div>
+          <label class="fl" style="margin-top:0">一言メモ</label>
+          <textarea id="rm" rows="2" placeholder="自由記述">${t('memo')}</textarea>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-bottom:6px">
+          <button class="btn btn-g" onclick="clrR()">クリア</button>
+          <button class="btn btn-p" style="font-size:14px;padding:10px 22px" onclick="svR()">${isE?'更新して保存':'日報を保存'}</button>
+        </div>
+        ${r&&!isE?`<div style="font-size:11px;color:var(--green-text);text-align:right;font-weight:600">本日分保存済（上書き可）</div>`:''}
+      </div>
+    </div>`;
+}
+function aKpi(k,d){const e=document.getElementById('kpi-'+k);if(e)e.value=Math.max(0,(parseInt(e.value)||0)+d);}
+function aL(lr,d){const e=document.getElementById('l-'+lid(lr));if(e)e.value=Math.max(0,(parseInt(e.value)||0)+d);}
+function pMood(btn){selMood=btn.dataset.mood;document.querySelectorAll('.mb').forEach(b=>b.classList.toggle('on',b===btn));}
+function svR(){
+  const loss={};LOSS.forEach(lr=>{const e=document.getElementById('l-'+lid(lr));loss[lr]=e?parseInt(e.value)||0:0;});
+  const dv=editId?(reports.find(x=>x.id===editId)?.date||td()):(document.getElementById('rd')?.value||td());
+  const en={id:editId||uid(),date:dv,approach:parseInt(document.getElementById('kpi-approach')?.value)||0,hearing:parseInt(document.getElementById('kpi-hearing')?.value)||0,proposal:parseInt(document.getElementById('kpi-proposal')?.value)||0,closing:parseInt(document.getElementById('kpi-closing')?.value)||0,contract:parseInt(document.getElementById('kpi-contract')?.value)||0,plan:document.getElementById('rp')?.value||'',action:document.getElementById('rd2')?.value||'',check:document.getElementById('rc')?.value||'',nextAction:document.getElementById('ra')?.value||'',successPattern:document.getElementById('rs')?.value||'',failReason:document.getElementById('rf')?.value||'',hypothesis:document.getElementById('rh')?.value||'',priority1:document.getElementById('r1')?.value||'',priority2:document.getElementById('r2')?.value||'',priority3:document.getElementById('r3')?.value||'',loss,mood:selMood,memo:document.getElementById('rm')?.value||''};
+  if(editId){const i=reports.findIndex(r=>r.id===editId);if(i>=0)reports[i]=en;}
+  else{const i=reports.findIndex(r=>r.date===dv);if(i>=0)reports[i]=en;else reports.push(en);}
+  if(en.successPattern.trim()){const al=patterns.some(p=>p.body===en.successPattern&&p.date===dv);if(!al)patterns.unshift({id:uid(),date:dv,type:'success',title:en.successPattern.slice(0,40),body:en.successPattern,tags:[]});}
+  vy=parseInt(dv.slice(0,4));vm=parseInt(dv.slice(5,7));
+  const wasE=editId;editId=null;save();toast(wasE?'更新しました':'日報を保存しました');
+  if(wasE)sw('history');else rReport();
+}
+function clrR(){['rp','rd2','rc','ra','rs','rf','rh','r1','r2','r3','rm'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});FUNNEL.forEach(f=>{const e=document.getElementById('kpi-'+f.k);if(e)e.value='0';});LOSS.forEach(lr=>{const e=document.getElementById('l-'+lid(lr));if(e)e.value='0';});}
+
+/* ── 日報履歴 ── */
+function rHistory(){
+  const sorted=[...vR()].sort((a,b)=>b.date.localeCompare(a.date));
+  document.getElementById('pg-history').innerHTML=mnHTML()+`
+    <div class="g2">
+      <div><div class="card">
+        <div class="ch">${vy}年${vm}月の日報<span style="font-size:10px;font-weight:400">${sorted.length}件</span></div>
+        <div style="overflow-y:auto;max-height:560px">
+          ${sorted.length?sorted.map(r=>`<div class="ri" id="ri-${r.id}" onclick="sDtl('${r.id}')">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;flex-wrap:wrap;gap:4px">
+              <span style="font-size:12px;font-weight:800">${r.date} <span style="font-size:14px">${r.mood||''}</span></span>
+              <div style="display:flex;gap:8px">${['approach','proposal','contract'].map(k=>{const f=FUNNEL.find(x=>x.k===k);return`<div style="text-align:center"><div style="font-size:14px;font-weight:800">${r[k]||0}</div><div style="font-size:9px;color:var(--text3)">${f.label.slice(0,3)}</div></div>`;}).join('')}</div>
+            </div>
+            ${r.successPattern?`<div style="font-size:11px;color:var(--green-text);font-weight:600;overflow:hidden;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical">✓ ${r.successPattern}</div>`:r.action?`<div style="font-size:11px;color:var(--text2);overflow:hidden;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical">${r.action}</div>`:`<div style="font-size:11px;color:var(--text3)">記録なし</div>`}
+          </div>`).join(''):`<div style="padding:24px;text-align:center;font-size:12px;color:var(--text3)">${vy}年${vm}月の記録はありません<br>◀▶で月を切り替えられます</div>`}
+        </div>
+      </div></div>
+      <div id="dtl"><div class="card" style="text-align:center;padding:30px"><div style="font-size:12px;color:var(--text3)">左の日報をクリックすると詳細・編集・削除ができます</div></div></div>
+    </div>`;
+}
+function sDtl(id){
+  const r=reports.find(x=>x.id===id);if(!r)return;
+  document.querySelectorAll('.ri').forEach(e=>e.classList.remove('sel'));
+  const ri=document.getElementById('ri-'+id);if(ri)ri.classList.add('sel');
+  document.getElementById('dtl').innerHTML=`<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div style="font-size:15px;font-weight:800">${r.date} <span style="font-size:18px">${r.mood||''}</span></div>
+      <div style="display:flex;gap:6px"><button class="btn btn-g btn-sm" onclick="eRep('${r.id}')">編集</button><button class="btn btn-warn" onclick="dRep('${r.id}')">削除</button></div>
+    </div>
+    <div class="g5" style="margin-bottom:12px">${FUNNEL.map(f=>`<div class="kpi"><div class="kl">${f.label}</div><div class="kv" style="font-size:18px">${r[f.k]||0}</div></div>`).join('')}</div>
+    <div class="pdca-grid">${[{k:'plan',l:'P 計画',bg:'var(--blue-bg)',c:'var(--blue-text)'},{k:'action',l:'D 行動',bg:'var(--green-bg)',c:'var(--green-text)'},{k:'check',l:'C 評価',bg:'var(--amber-bg)',c:'var(--amber-text)'},{k:'nextAction',l:'A 改善',bg:'var(--red-bg)',c:'var(--red-text)'}].map(p=>`<div class="pdca-box" style="background:${p.bg}"><div class="pdca-tag" style="color:${p.c}">${p.l}</div><div style="font-size:12px;color:var(--text2);line-height:1.5;white-space:pre-wrap;word-break:break-all;min-height:24px">${r[p.k]||'—'}</div></div>`).join('')}</div>
+    ${r.successPattern?`<div class="thought s"><div class="tl">成功パターン</div><div class="tb">${r.successPattern}</div></div>`:''}
+    ${r.failReason?`<div class="thought f"><div class="tl">詰まったこと</div><div class="tb">${r.failReason}</div></div>`:''}
+    ${r.hypothesis?`<div class="thought h"><div class="tl">仮説・学び</div><div class="tb">${r.hypothesis}</div></div>`:''}
+    ${(r.priority1||r.priority2||r.priority3)?`<div style="margin-top:10px;padding:10px;background:var(--bg2);border-radius:var(--r)"><div style="font-size:11px;font-weight:700;margin-bottom:5px">明日の重点行動</div>${[r.priority1,r.priority2,r.priority3].filter(Boolean).map((p,i)=>`<div style="font-size:12px;color:var(--text2);padding:2px 0">${'①②③'[i]} ${p}</div>`).join('')}</div>`:''}
+    ${r.loss&&Object.values(r.loss).some(x=>x>0)?`<div style="margin-top:10px"><div style="font-size:11px;font-weight:700;margin-bottom:5px">障害内訳</div><div style="display:flex;flex-wrap:wrap;gap:6px">${LOSS.filter(lr=>r.loss[lr]>0).map(lr=>`<span style="font-size:11px;background:var(--red-bg);color:var(--red-text);padding:2px 8px;border-radius:4px;font-weight:600">${lr}: ${r.loss[lr]}</span>`).join('')}</div></div>`:''}
+  </div>`;
+}
+function eRep(id){editId=id;sw('report');}
+function dRep(id){if(!confirm('この日報を削除しますか？'))return;reports=reports.filter(r=>r.id!==id);save();toast('削除しました');sw('history');}
+
+/* ── 成功パターン ── */
+function rPattern(){
+  const succ=patterns.filter(p=>p.type==='success');const fail=patterns.filter(p=>p.type==='fail');const hypo=patterns.filter(p=>p.type==='hypo');
+  const form=`<div class="seg" id="pseg"><button class="seg-btn on" data-type="success" onclick="pPT(this)">成功パターン</button><button class="seg-btn" data-type="fail" onclick="pPT(this)">失敗・課題</button><button class="seg-btn" data-type="hypo" onclick="pPT(this)">仮説</button></div>
+    <label class="fl" style="margin-top:0">タイトル</label><input id="ptit" placeholder="例：共感ファーストトーク" style="margin-bottom:6px"/>
+    <label class="fl" style="margin-top:0">内容・詳細</label><textarea id="pbod" rows="3" placeholder="具体的な状況・言葉・結果"></textarea>
+    <label class="fl">タグ（カンマ区切り）</label><input id="ptag" placeholder="ヒアリング, クロージング" style="margin-bottom:10px"/>
+    <div style="display:flex;justify-content:flex-end"><button class="btn btn-p" onclick="addPat()">追加</button></div>`;
+  document.getElementById('pg-pattern').innerHTML=`<div class="g2"><div class="card"><div class="ch">パターンを追加</div>${form}</div>
+    <div>${['success','fail','hypo'].map(type=>{const list=patterns.filter(p=>p.type===type);const ti={success:'成功パターン集',fail:'失敗・課題',hypo:'仮説ログ'};return list.length||type==='success'?`<div class="card"><div class="ch">${ti[type]}<span style="font-size:10px;font-weight:400">${list.length}件</span></div>${list.length?list.map(p=>pCard(p)).join(''):`<div style="font-size:12px;color:var(--text3);padding:8px 0">日報の成功パターン欄から自動追加されます</div>`}</div>`:''}).join('')}</div></div>`;
+}
+function pPT(btn){patType=btn.dataset.type;document.querySelectorAll('#pseg .seg-btn').forEach(b=>b.classList.toggle('on',b===btn));}
+function addPat(){const t=document.getElementById('ptit')?.value.trim();if(!t){document.getElementById('ptit')?.focus();return;}const tags=document.getElementById('ptag')?.value.split(',').map(x=>x.trim()).filter(Boolean)||[];patterns.unshift({id:uid(),date:td(),type:patType,title:t,body:document.getElementById('pbod')?.value||'',tags});document.getElementById('ptit').value='';document.getElementById('pbod').value='';document.getElementById('ptag').value='';save();rPattern();}
+function pCard(p){const cf={success:{bg:'var(--green-bg)',c:'var(--green-text)',l:'成功'},fail:{bg:'var(--red-bg)',c:'var(--red-text)',l:'失敗'},hypo:{bg:'var(--blue-bg)',c:'var(--blue-text)',l:'仮説'}};const s=cf[p.type]||cf.hypo;return`<div class="thought ${p.type==='success'?'s':p.type==='fail'?'f':'h'}" style="margin-bottom:10px;padding:9px 12px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div style="display:flex;align-items:center;gap:6px"><span style="font-size:10px;background:${s.bg};color:${s.c};padding:2px 7px;border-radius:4px;font-weight:700">${s.l}</span><span style="font-size:12px;font-weight:700">${p.title}</span></div><button style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:12px" onclick="dPat('${p.id}')">✕</button></div><div style="font-size:12px;color:var(--text2);line-height:1.5">${p.body}</div>${p.tags.length?`<div style="margin-top:5px;display:flex;gap:4px;flex-wrap:wrap">${p.tags.map(t=>`<span style="font-size:10px;background:var(--bg2);color:var(--text3);padding:1px 7px;border-radius:4px">${t}</span>`).join('')}</div>`:''}<div style="font-size:10px;color:var(--text3);margin-top:4px">${p.date}</div></div>`;}
+function dPat(id){if(!confirm('削除しますか？'))return;patterns=patterns.filter(p=>p.id!==id);save();rPattern();}
+
+/* ── 目標設定 ── */
+function rGoal(){
+  document.getElementById('pg-goal').innerHTML=mnHTML()+`
+    <div class="g2">
+      <div class="card">
+        <div class="ch">目標設定 <button class="btn btn-p btn-sm" onclick="svGoals()">保存</button></div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6">指標名は自由に読み替えてOK（例：「アプローチ」→「運動回数」）</div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed">
+          <thead><tr style="border-bottom:1px solid var(--border)"><th style="text-align:left;padding:6px;font-size:11px;color:var(--text3);font-weight:700">指標</th><th style="padding:6px;font-size:11px;color:var(--text3);font-weight:700;text-align:center">日次</th><th style="padding:6px;font-size:11px;color:var(--text3);font-weight:700;text-align:center">月間</th></tr></thead>
+          <tbody>${FUNNEL.map(f=>`<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 6px;font-weight:700">${f.label}</td><td style="padding:8px 6px;text-align:center"><input style="width:72px;text-align:center;font-size:15px;font-weight:700" type="number" id="gd-${f.k}" value="${goals.daily[f.k]}" min="0"/></td><td style="padding:8px 6px;text-align:center"><input style="width:72px;text-align:center;font-size:15px;font-weight:700" type="number" id="gm-${f.k}" value="${goals.monthly[f.k]}" min="0"/></td></tr>`).join('')}</tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="ch">${vy}年${vm}月 達成状況</div>
+        ${vR().length===0?`<div style="font-size:12px;color:var(--text3);padding:10px 0">この月の記録がありません</div>`:FUNNEL.map(f=>{const v=vS(f.k);const p=pct(v,goals.monthly[f.k]);return`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px"><span style="color:var(--text2);font-weight:600">${f.label}</span><span style="color:${pc(p)};font-weight:800">${v} / ${goals.monthly[f.k]}（${p}%）</span></div><div class="kbar" style="height:5px"><div class="kfill" style="width:${p}%;background:${pc(p)}"></div></div></div>`;}).join('')}
+      </div>
+    </div>
+    <div class="card"><div class="ch">月別達成率の推移（直近6ヶ月）</div><div style="position:relative;height:180px"><canvas id="gtrend"></canvas></div></div>`;
+  setTimeout(()=>{
+    const ms=allMs().slice(-6);if(!ms.length)return;
+    const ds=FUNNEL.map((f,i)=>({label:f.label,data:ms.map(ym=>{const rps=reports.filter(r=>r.date.startsWith(ym));return pct(rps.reduce((a,r)=>a+(r[f.k]||0),0),goals.monthly[f.k]);}),borderColor:['#1560b8','#0a7a56','#8e5c0e','#aa2c2c','#5a38b8'][i],backgroundColor:'transparent',tension:0.4,borderWidth:2.5,pointRadius:4}));
+    charts.gt=new Chart(document.getElementById('gtrend'),{type:'line',data:{labels:ms.map(ym=>`${parseInt(ym.slice(5,7))}月`),datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{font:{size:10},callback:v=>v+'%'},grid:{color:'rgba(128,128,128,0.07)'}},x:{ticks:{font:{size:11}},grid:{display:false}}}}});
+  },0);
+}
+function svGoals(){FUNNEL.forEach(f=>{const d=document.getElementById('gd-'+f.k);const m=document.getElementById('gm-'+f.k);if(d)goals.daily[f.k]=parseInt(d.value)||0;if(m)goals.monthly[f.k]=parseInt(m.value)||0;});save();toast('目標を保存しました');rGoal();}
+
+/* ── 個人目標 ── */
+function rPGoal(){
+  const act=personalGoals.filter(g=>!g.done);const done=personalGoals.filter(g=>g.done);
+  document.getElementById('pg-mypgoal').innerHTML=`
+    <div class="g2">
+      <div>
+        <div class="card">
+          <div class="ch">新しい個人目標を追加</div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:10px">営業・ダイエット・副業・資格取得など、どんな目標でも</div>
+          <label class="fl" style="margin-top:0">目標タイトル</label>
+          <input id="pgt" placeholder="例：3ヶ月で5kg痩せる / 月収20万達成" style="margin-bottom:8px"/>
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-bottom:8px">
+            <div><label class="fl" style="margin-top:0">期限</label><input type="date" id="pgd"/></div>
+            <div><label class="fl" style="margin-top:0">メモ</label><input id="pgn" placeholder="具体的な数値など"/></div>
+          </div>
+          <label class="fl" style="margin-top:0">カテゴリ</label>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px" id="pgcats">${CATS.map(c=>`<button style="padding:4px 12px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid ${pgCat===c.k?c.c:'var(--border)'};background:${pgCat===c.k?c.bg:'none'};color:${pgCat===c.k?c.c:'var(--text2)'};font-weight:${pgCat===c.k?700:400};font-family:var(--font)" data-cat="${c.k}" onclick="pCat(this,'${c.bg}','${c.c}')">${c.l}</button>`).join('')}</div>
+          <button class="btn btn-p" style="width:100%;font-size:14px;padding:12px" onclick="aPGoal()">追加する</button>
+        </div>
+        ${done.length?`<div class="card"><div class="ch">達成済み<span style="font-size:10px;font-weight:400">${done.length}件</span></div>${done.map(g=>pgItm(g)).join('')}</div>`:''}
+      </div>
+      <div class="card">
+        <div class="ch">進行中の目標<span style="font-size:10px;font-weight:400">${act.length}件</span></div>
+        ${act.length?act.map(g=>pgItm(g)).join(''):`<div style="padding:28px;text-align:center;font-size:13px;color:var(--text3)">目標をまだ登録していません</div>`}
+        ${personalGoals.length?`<div style="margin-top:12px;padding:12px;background:var(--bg2);border-radius:var(--r)"><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px">達成率</div><div style="display:flex;align-items:center;gap:10px"><div style="flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden"><div style="width:${Math.round(done.length/personalGoals.length*100)}%;height:100%;background:var(--green);border-radius:3px"></div></div><span style="font-size:14px;font-weight:800;color:var(--green)">${Math.round(done.length/personalGoals.length*100)}%</span></div><div style="font-size:11px;color:var(--text3);margin-top:4px">${done.length} / ${personalGoals.length} 件達成</div></div>`:''}
+      </div>
+    </div>`;
+}
+function pCat(btn,bg,c){pgCat=btn.dataset.cat;document.querySelectorAll('#pgcats button').forEach(b=>{const s=b===btn;b.style.background=s?bg:'none';b.style.color=s?c:'var(--text2)';b.style.fontWeight=s?700:400;b.style.borderColor=s?c:'var(--border)';});}
+function aPGoal(){const t=document.getElementById('pgt')?.value.trim();if(!t){document.getElementById('pgt')?.focus();return;}personalGoals.unshift({id:uid(),title:t,cat:pgCat,due:document.getElementById('pgd')?.value||'',note:document.getElementById('pgn')?.value.trim()||'',done:false});document.getElementById('pgt').value='';document.getElementById('pgd').value='';document.getElementById('pgn').value='';save();rPGoal();}
+function tPG(id){const g=personalGoals.find(x=>x.id===id);if(g)g.done=!g.done;save();rPGoal();}
+function dPG(id){if(!confirm('削除しますか？'))return;personalGoals=personalGoals.filter(x=>x.id!==id);save();rPGoal();}
+function pgItm(g){const cat=CATS.find(c=>c.k===g.cat)||CATS[6];const ov=!g.done&&g.due&&g.due<td();return`<div class="pg-item"><button class="pg-chk${g.done?' done':''}" onclick="tPG('${g.id}')"></button><div style="flex:1;min-width:0"><div class="pgtitle${g.done?' done':''}">${g.title}</div>${g.note?`<div style="font-size:11px;color:var(--text3);margin-top:2px">${g.note}</div>`:''}<div style="display:flex;gap:6px;margin-top:4px;align-items:center;flex-wrap:wrap"><span class="pgcat" style="background:${cat.bg};color:${cat.c}">${cat.l}</span>${g.due?`<span style="font-size:10px;color:${ov?'var(--red-text)':'var(--text3)'};font-weight:${ov?700:400}">${g.due}${ov?' 期限超過':''}</span>`:''}</div></div><button class="pgdel" onclick="dPG('${g.id}')">✕</button></div>`;}
+
+/* ── データ管理 ── */
+function rData(){
+  const total=reports.length;const months=allMs().filter(ym=>reports.some(r=>r.date.startsWith(ym))).length;
+  const kb=(new Blob([JSON.stringify({goals,reports,patterns,personalGoals})]).size/1024).toFixed(1);
+  document.getElementById('pg-data').innerHTML=`
+    <div class="g3" style="margin-bottom:14px">
+      <div class="card" style="text-align:center"><div class="kl">日報件数</div><div class="stat-num">${total}<span style="font-size:16px;font-weight:700">件</span></div></div>
+      <div class="card" style="text-align:center"><div class="kl">記録月数</div><div class="stat-num">${months}<span style="font-size:16px;font-weight:700">ヶ月</span></div></div>
+      <div class="card" style="text-align:center"><div class="kl">データサイズ</div><div class="stat-num" style="font-size:24px">${kb}<span style="font-size:16px;font-weight:700">KB</span></div></div>
+    </div>
+
+    <div class="data-box">
+      <h3>エクスポート（バックアップ・データ共有）</h3>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.6">全データのバックアップ、または別デバイスへの移行に使えます。CSVはExcelや他ツールとの連携に便利です。</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-green btn-sm" onclick="expJSON()">JSONでダウンロード（完全バックアップ）</button>
+        <button class="btn btn-p btn-sm" onclick="expCSV()">日報をCSVでダウンロード（Excel連携）</button>
+      </div>
+    </div>
+
+    <div class="data-box">
+      <h3>インポート（データの復元）</h3>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.6">エクスポートしたJSONファイルを読み込んで復元できます。<br><strong style="color:var(--red-text)">注意：現在のデータは上書きされます</strong></p>
+      <input type="file" id="impFile" accept=".json" style="width:auto" onchange="impJSON(this)"/>
+    </div>
+
+    <div class="data-box">
+      <h3>このツールについて</h3>
+      <div style="font-size:12px;color:var(--text2);line-height:2">
+        <div>バージョン: 1.0.0 &nbsp;|&nbsp; ライセンス: 完全無料・個人利用・商用利用可</div>
+        <div>データ保存: このブラウザのlocalStorageのみ（外部送信なし）</div>
+        <div>動作環境: Chrome / Safari / Firefox / Edge（最新版推奨）</div>
+        <div style="margin-top:8px;padding:10px 12px;background:var(--blue-bg);border-radius:var(--rsm);color:var(--blue-text)">データはこのデバイス・このブラウザにのみ保存されます。シークレットモードでは保存されません。別デバイスで使う場合はJSONエクスポートでデータを移してください。</div>
+      </div>
+    </div>
+
+    <div class="data-box" style="border:1px solid var(--red)">
+      <h3 style="color:var(--red-text)">データの消去</h3>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:12px">このブラウザのすべてのデータを削除します。取り消せません。</p>
+      <button class="btn btn-warn" onclick="clearAll()">すべてのデータを消去する</button>
+    </div>
+  `;
+}
+function expJSON(){const data={version:'1.0',exportedAt:new Date().toISOString(),goals,reports,patterns,personalGoals};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`action-dashboard-${td()}.json`;a.click();URL.revokeObjectURL(a.href);toast('JSONをダウンロードしました');}
+function expCSV(){const h='日付,アプローチ,ヒアリング,提案,クロージング,成約,計画,行動,評価,改善,成功パターン,仮説,気分';const rows=reports.sort((a,b)=>a.date.localeCompare(b.date)).map(r=>[r.date,r.approach||0,r.hearing||0,r.proposal||0,r.closing||0,r.contract||0,`"${(r.plan||'').replace(/"/g,'""')}"`,`"${(r.action||'').replace(/"/g,'""')}"`,`"${(r.check||'').replace(/"/g,'""')}"`,`"${(r.nextAction||'').replace(/"/g,'""')}"`,`"${(r.successPattern||'').replace(/"/g,'""')}"`,`"${(r.hypothesis||'').replace(/"/g,'""')}"`,r.mood||''].join(','));const csv='\uFEFF'+h+'\n'+rows.join('\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`daily-reports-${td()}.csv`;a.click();URL.revokeObjectURL(a.href);toast('CSVをダウンロードしました');}
+function impJSON(input){const f=input.files[0];if(!f)return;const reader=new FileReader();reader.onload=e=>{try{const d=JSON.parse(e.target.result);if(!confirm(`インポートしますか？\n日報 ${d.reports?.length||0}件\n現在のデータは上書きされます`))return;if(d.goals)goals=d.goals;if(d.reports)reports=d.reports;if(d.patterns)patterns=d.patterns;if(d.personalGoals)personalGoals=d.personalGoals;save();toast('インポートしました');rData();}catch(err){toast('インポート失敗：ファイル形式が正しくありません','#aa2c2c');}};reader.readAsText(f,'UTF-8');}
+function clearAll(){if(!confirm('すべてのデータを消去しますか？\nこの操作は取り消せません。'))return;if(!confirm('本当に消去しますか？'))return;localStorage.removeItem(KEY);goals={daily:{approach:20,hearing:8,proposal:3,closing:2,contract:1},monthly:{approach:400,hearing:160,proposal:60,closing:40,contract:20}};reports=[];patterns=[];personalGoals=[];toast('データを消去しました','#aa2c2c');rData();}
+
+/* ── 使い方ガイド ── */
+function rGuide(){
+  document.getElementById('pg-guide').innerHTML=`
+    <div class="guide-hero">
+      <h2>行動管理ダッシュボードへようこそ</h2>
+      <p>営業の数字管理からダイエット・資格勉強・副業まで、あらゆる目標を「行動プロセス」で記録・改善する<strong>完全無料ツール</strong>です。<br>データはこのブラウザに<strong>自動保存</strong>されます。ページを閉じても消えません。</p>
+    </div>
+    <div class="g2">
+      <div>
+        <div class="card"><div class="ch">どんな目標にも使えます</div>
+          <div class="uc-grid">
+            ${[{bg:'#e6f0fc',tc:'#0b3878',ic:'💼',t:'営業・仕事',b:'行動数・提案数・成約数\n失注理由の分析・PDCA'},
+               {bg:'#fdf2da',tc:'#54360a',ic:'🏃',t:'ダイエット・健康',b:'運動回数・食事記録\n体重・気分・コンディション'},
+               {bg:'#ede8fe',tc:'#36267a',ic:'📚',t:'勉強・スキル',b:'学習時間・問題演習\n仮説検証・振り返り'}
+            ].map(u=>`<div class="uc" style="background:${u.bg}"><div style="font-size:24px;margin-bottom:7px">${u.ic}</div><div style="font-size:13px;font-weight:700;color:${u.tc};margin-bottom:4px">${u.t}</div><div style="font-size:12px;color:${u.tc};opacity:.8;white-space:pre-line;line-height:1.6">${u.b}</div></div>`).join('')}
+          </div>
+        </div>
+        <div class="card"><div class="ch">はじめかた（4ステップ）</div>
+          ${[{n:1,t:'目標設定タブで目標を設定する',d:'5指標の日次・月間目標を入力。ダイエットなら「運動回数」「食事管理」などに読み替えてOK。',tip:'最初はざっくりでOK。使いながら調整できます'},
+            {n:2,t:'個人目標タブに大きな目標を書く',d:'「3ヶ月で5kg痩せる」「月収20万達成」など、カテゴリ別に目標を登録。',tip:'書いて可視化するだけで行動が変わります'},
+            {n:3,t:'毎日、日報入力タブで記録する',d:'KPI+PDCA+成功パターン+仮説+明日の重点行動を5〜10分で。データは自動保存。',tip:'成功パターン欄は必ず埋めましょう'},
+            {n:4,t:'ホームで月別KPIを確認してシェアする',d:'行動数・提案数・成約数・成約率が大きく表示されます。シェア用テキストをワンクリックでコピーできます。',tip:'月をまたいだ比較で自分の成長が見えます'}
+          ].map(s=>`<div class="step-card"><div class="step-num">${s.n}</div><div><div class="step-title">${s.t}</div><div class="step-desc">${s.d}</div><div class="step-tip">${s.tip}</div></div></div>`).join('')}
+        </div>
+      </div>
+      <div>
+        <div class="card"><div class="ch">日報の書き方（記入例）</div>
+          ${[{title:'営業の場合',items:[{l:'① KPI',c:'#0b3878',bg:'#e6f0fc',v:'アプローチ 22件 / 提案 3件 / 成約 1件'},{l:'② PDCA',c:'#064d36',bg:'#e1f4ec',v:'P: 新規20件\nD: 午前架電・午後商談\nC: 成約1件、ヒアリング率↑\nA: 冒頭の質問を変える'},{l:'③ 成功パターン',c:'#62180a',bg:'#fde8e2',v:'「今どんな悩みがありますか？」と聞いたら相手が話し始めた'},{l:'④ 明日の重点行動',c:'#36267a',bg:'#ede8fe',v:'① 同じ質問パターンで試す\n② 検討中3社にフォロー\n③ 提案資料2パターン作成'}]},
+            {title:'ダイエットの場合',items:[{l:'① 行動量',c:'#0b3878',bg:'#e6f0fc',v:'ウォーキング 8000歩 / 筋トレ 30分 / 食事管理 ◯'},{l:'② PDCA',c:'#064d36',bg:'#e1f4ec',v:'P: 昼食をサラダに変える\nD: 朝に30分ウォーキング実施\nC: 体重 −0.3kg\nA: 夕食後デザートをやめる'},{l:'③ 成功パターン',c:'#62180a',bg:'#fde8e2',v:'朝に運動を先にやると食事制限への意識が自然と上がる'},{l:'④ 明日の重点行動',c:'#36267a',bg:'#ede8fe',v:'① 夕食後はフルーツのみ\n② 昼食は持参弁当\n③ 就寝前ストレッチ10分'}]}
+          ].map(ex=>`<div style="border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:10px"><div style="background:var(--bg2);padding:8px 13px;font-size:11px;font-weight:700;border-bottom:1px solid var(--border)">${ex.title}</div><div style="padding:10px 12px;display:flex;flex-direction:column;gap:7px">${ex.items.map(r=>`<div style="background:${r.bg};border-radius:var(--rsm);padding:8px 11px"><div style="font-size:10px;font-weight:700;color:${r.c};margin-bottom:2px">${r.l}</div><div style="font-size:12px;white-space:pre-line;line-height:1.5">${r.v}</div></div>`).join('')}</div></div>`).join('')}
+        </div>
+        <div class="card"><div class="ch">よくある質問</div>
+          ${[{q:'データはどこに保存されますか？',a:'このブラウザのlocalStorageにのみ保存されます。外部サーバーへは一切送信されません。シークレットモードでは保存されません。'},
+            {q:'スマホでも使えますか？',a:'はい。スマホのブラウザ（Chrome / Safari）で開いてください。画面サイズに最適化されています。'},
+            {q:'月ナビゲーションの使い方は？',a:'ホーム・日報履歴・目標タブの上部「◀ ○年○月 ▶」で切り替えます。下のドットで記録がある月を確認・ジャンプできます。'},
+            {q:'過去の日報を修正・削除したい',a:'日報履歴タブでその月に切り替えて対象の日報をクリック →「編集」または「削除」ボタンを使います。'},
+            {q:'SNSでシェアするには？',a:'記録を入力後、ホームタブに「SNSシェア用サマリー」が表示されます。ワンクリックでテキストをコピーしてそのまま投稿できます。'}
+          ].map((f,i)=>`<div class="faq-item"><div class="faq-q" onclick="tFaq(${i})"><span>Q. ${f.q}</span><span id="fi${i}" style="flex-shrink:0;color:var(--text3);font-size:16px">＋</span></div><div class="faq-a" id="fa${i}">${f.a}</div></div>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center;padding:8px 0 12px">
+      <button class="btn btn-p" style="padding:13px 32px;font-size:15px" onclick="sw('report')">日報入力を始める →</button>
+    </div>`;
+}
+function tFaq(i){const a=document.getElementById('fa'+i);const ic=document.getElementById('fi'+i);if(!a||!ic)return;const op=a.style.display!=='block';a.style.display=op?'block':'none';ic.textContent=op?'−':'＋';}
+
+/* ── ユーティリティ ── */
+function getLast14(){const res=[];for(let i=13;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const ds=`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;res.push(reports.find(r=>r.date===ds)||{date:ds,approach:0});}return res;}
+function bDots(){return getLast14().map((r,i)=>{const h=(r.approach||0)>0||(r.contract||0)>0;return`<div class="dot${i===13?' cur':h?' hit':''}"></div>`;}).join('');}
+function calcS(){let s=0;for(let i=0;i<90;i++){const d=new Date();d.setDate(d.getDate()-i);const ds=`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;if(reports.find(r=>r.date===ds))s++;else break;}return s;}
+
+/* ── 起動 ── */
+load();
+document.getElementById('pg-guide').querySelector && rGuide();
+</script>
+</body>
+</html>
